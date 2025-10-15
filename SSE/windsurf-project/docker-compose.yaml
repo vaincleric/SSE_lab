@@ -1,0 +1,12 @@
+version: "3.8"
+
+services:
+  enk:
+    build: .
+    environment:
+      - LOCAL_KEK_PATH=/secrets/kek
+      - APP_JWT_SECRET=${APP_JWT_SECRET}
+    volumes:
+      - ./secrets:/secrets
+    ports:
+      - "5000:5000"

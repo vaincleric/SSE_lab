@@ -1,0 +1,41 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: enc-api
+  namespace: enc-api
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: enc-api
+  template:
+    metadata:
+      labels:
+        app: enc-api
+    spec:
+      initContainers:
+      - name: init-kek
+        image: busybox:1.36
+        command: ['sh', '-c', 'echo generating kek && mkdir -p /secrets && touch /secrets/kek && chmod 600 /secrets/kek']
+        volumeMounts:
+        - name: kek-volume
+          mountPath: /secrets
+      containers:
+      - name: enc-api
+        image: enc-api:latest
+        imagePullPolicy: IfNotPresent
+        env:
+        - name: LOCAL_KEK_PATH
+          value: /secrets/kek
+        envFrom:
+        - secretRef:
+            name: enc-api-secrets
+        ports:
+        - containerPort: 5000
+        volumeMounts:
+        - name: kek-volume
+          mountPath: /secrets
+          readOnly: false
+      volumes:
+      - name: kek-volume
+        emptyDir: {}
